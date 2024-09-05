@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BeNatural ByLaury - Gestion des Services</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        input, select, button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #loginForm, #sellerPanel, #adminPanel {
+            display: none;
+        }
+        .service-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .service-item select, .service-item input {
+            width: 30%;
+        }
+        #totalAmount {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .logout-button {
+            background-color: #f44336;
+            margin-top: 20px;
+        }
+        .logout-button:hover {
+            background-color: #d32f2f;
+        }
+        #dailyReport {
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .total-row {
+            font-weight: bold;
+            background-color: #e6e6e6;
+        }
+        #chart {
+            margin-top: 30px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>BeNatural ByLaury - Gestion des Services</h1>
+        
+        <div id="loginForm">
+            <h2>Connexion</h2>
+            <input type="text" id="username" placeholder="Nom d'utilisateur">
+            <input type="password" id="password" placeholder="Mot de passe">
+            <button onclick="login()">Se connecter</button>
+        </div>
+
+        <div id="sellerPanel">
+            <h2>Espace Vendeur</h2>
+            <select id="clientSelect">
+                <option value="">Sélectionnez un client</option>
+            </select>
+            <button onclick="showCreateClientForm()">Créer un nouveau client</button>
+            <div id="createClientForm" style="display:none;">
+                <input type="text" id="newClientName" placeholder="Nom du client">
+                <input type="tel" id="newClientPhone" placeholder="Numéro de téléphone">
+                <button onclick="createClient()">Créer</button>
+            </div>
+            <div id="services">
+                <div class="service-item">
+                    <select class="service-select">
+                        <option value="">Sélectionnez un service</option>
+                        <option value="Pédicure">Pédicure</option>
+                        <option value="Coiffure">Coiffure</option>
+                        <option value="Manucure">Manucure</option>
+                        <option value="Massage">Massage</option>
+                        <option value="Soin de visage">Soin de visage</option>
+                        <option value="Soin corporel">Soin corporel</option>
+                        <option value="Épilation">Épilation</option>
+                        <option value="Maquillage">Maquillage</option>
+                        <option value="Teinture de cheveux">Teinture de cheveux</option>
+                        <option value="Extensions de cils">Extensions de cils</option>
+                        <option value="Soins anti-âge">Soins anti-âge</option>
+                        <option value="Traitements pour la peau">Traitements pour la peau</option>
+                        <option value="Bronzage">Bronzage</option>
+                    </select>
+                    <input type="number" class="service-price" placeholder="Prix">
+                </div>
+            </div>
+            <button onclick="addService()">Ajouter un service</button>
+            <div id="totalAmount">Total : 0 FCFA</div>
+            <button onclick="submitServices()">Enregistrer la facture</button>
+            <button onclick="logout()" class="logout-button">Se déconnecter</button>
+        </div>
+
+        <div id="adminPanel">
+            <h2>Espace Administrateur</h2>
+            <button onclick="showClientList()">Liste des clients</button>
+            <button onclick="showDailyConsumption()">Consommations journalières</button>
+            <button onclick="showDailyReport()">Rapport journalier</button>
+            <button onclick="exportConsumptionData()">Exporter les consommations</button>
+            <button onclick="exportClientData()">Exporter les données clients</button>
+            <div id="clientList" style="display:none;">
+                <!-- La liste des clients sera générée ici dynamiquement -->
+            </div>
+            <div id="dailyConsumptionList" style="display:none;">
+                <!-- La liste des consommations journalières sera générée ici dynamiquement -->
+            </div>
+            <div id="dailyReportSection" style="display:none;">
+                <h3>Rapport Journalier</h3>
+                <input type="date" id="dateSelect">
+                <button onclick="loadDailyReport()">Charger le rapport</button>
+                <div id="dailyReport"></div>
+                <canvas id="chart"></canvas>
+            </div>
+            <button onclick="logout()" class="logout-button">Se déconnecter</button>
+        </div>
+<div id="adminPanel">
+    <!-- ... autres boutons ... -->
+    <button onclick="showStoredData()">Afficher les données stockées</button>
+    <!-- ... -->
+</div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let clients = [];
+        let consumptions = [];
+
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            if (username === 'admin' && password === 'admin123') {
+                currentUser = 'admin';
+                showAdminPanel();
+            } else if (username === 'vendeur' && password === 'vendeur123') {
+                currentUser = 'vendeur';
+                showSellerPanel();
+            } else {
+                alert('Identifiants incorrects');
+            }
+        }
+
+        function showAdminPanel() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'block';
+        }
+
+        function showSellerPanel() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('sellerPanel').style.display = 'block';
+            updateClientList();
+        }
+
+        function updateClientList() {
+            const clientSelect = document.getElementById('clientSelect');
+            clientSelect.innerHTML = '<option value="">Sélectionnez un client</option>';
+            clients.forEach(client => {
+                const option = document.createElement('option');
+                option.value = client.id;
+                option.textContent = client.name;
+                clientSelect.appendChild(option);
+            });
+        }
+
+        function showCreateClientForm() {
+            document.getElementById('createClientForm').style.display = 'block';
+        }
+
+        function createClient() {
+            const name = document.getElementById('newClientName').value;
+            const phone = document.getElementById('newClientPhone').value;
+            if (name && phone) {
+                const newClient = {id: Date.now().toString(), name, phone};
+                clients.push(newClient);
+                alert('Client créé avec succès');
+                document.getElementById('newClientName').value = '';
+                document.getElementById('newClientPhone').value = '';
+                document.getElementById('createClientForm').style.display = 'none';
+                updateClientList();
+            } else {
+                alert('Veuillez remplir tous les champs');
+            }
+        }
+
+        function addService() {
+            const servicesDiv = document.getElementById('services');
+            const newService = document.createElement('div');
+            newService.className = 'service-item';
+            newService.innerHTML = `
+                <select class="service-select">
+                    <option value="">Sélectionnez un service</option>
+                    <option value="Pédicure">Pédicure</option>
+                    <option value="Coiffure">Coiffure</option>
+                    <option value="Manucure">Manucure</option>
+                    <option value="Massage">Massage</option>
+                    <option value="Soin de visage">Soin de visage</option>
+                    <option value="Soin corporel">Soin corporel</option>
+                    <option value="Épilation">Épilation</option>
+                    <option value="Maquillage">Maquillage</option>
+                    <option value="Teinture de cheveux">Teinture de cheveux</option>
+                    <option value="Extensions de cils">Extensions de cils</option>
+                    <option value="Soins anti-âge">Soins anti-âge</option>
+                    <option value="Traitements pour la peau">Traitements pour la peau</option>
+                    <option value="Bronzage">Bronzage</option>
+                </select>
+                <input type="number" class="service-price" placeholder="Prix">
+            `;
+            servicesDiv.appendChild(newService);
+            updateTotal();
+        }
+
+        function updateTotal() {
+            const prices = document.getElementsByClassName('service-price');
+            let total = 0;
+            for (let price of prices) {
+                total += Number(price.value) || 0;
+            }
+            document.getElementById('totalAmount').innerText = `Total : ${total} FCFA`;
+        }
+
+        function submitServices() {
+            const clientId = document.getElementById('clientSelect').value;
+            if (!clientId) {
+                alert('Veuillez sélectionner un client');
+                return;
+            }
+            const services = document.getElementsByClassName('service-item');
+            let consumption = {
+                clientId: clientId,
+                date: new Date().toISOString().split('T')[0],
+                services: [],
+                total: 0
+            };
+            for (let service of services) {
+                const serviceName = service.querySelector('.service-select').value;
+                const servicePrice = Number(service.querySelector('.service-price').value) || 0;
+                if (serviceName && servicePrice) {
+                    consumption.services.push({name: serviceName, price: servicePrice});
+                    consumption.total += servicePrice;
+                }
+            }
+            consumptions.push(consumption);
+            alert('Facture enregistrée avec succès');
+            // Reset form
+            document.getElementById('clientSelect').value = '';
+            document.getElementById('services').innerHTML = '';
+            addService();
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('sellerPanel').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'none';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            // Réinitialiser l'espace vendeur
+            document.getElementById('clientSelect').value = '';
+            document.getElementById('services').innerHTML = '';
+            addService();
+            updateTotal();
+        }
+
+        // Initialisation
+        document.getElementById('loginForm').style.display = 'block';
+        addService();
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('service-price')) {
+                updateTotal();
+            }
+        });
+    </script>
+
+<script src="additional-functions.js"></script>
+<script src="benatural-data-persistence.js"></script>
+<script src="benatural-show-stored-data.js"></script>
+<script src="benatural-export-data.js"></script>
+</body>
+</html>
